@@ -1,0 +1,25 @@
+@page "/"
+@page "/events"
+@inject EventStore Store
+
+<PageTitle>Browse events | EventEase</PageTitle>
+<section class="intro">
+    <p class="eyebrow">DISCOVER YOUR NEXT EXPERIENCE</p>
+    <h1>Great events.<br />Meaningful connections.</h1>
+    <p>Explore corporate gatherings and social celebrations. Find your next reason to come together.</p>
+</section>
+<div class="section-heading">
+    <h2>Upcoming events</h2>
+    <span>@Store.Events.Count experiences to explore</span>
+</div>
+<div class="event-grid">
+    @foreach (var eventItem in Store.Events)
+    {
+        <EventCard @key="eventItem.Id"
+                   @bind-Event:get="eventItem" @bind-Event:set="UpdateEvent" />
+    }
+</div>
+
+@code {
+    private void UpdateEvent(EventModel updated) => Store.Update(updated);
+}

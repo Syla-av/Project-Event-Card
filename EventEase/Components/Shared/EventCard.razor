@@ -1,0 +1,45 @@
+<article class="event-card" aria-labelledby="event-title-@Event.Id">
+    <span class="category">@Event.Category</span>
+    <h2 id="event-title-@Event.Id">@Event.Name</h2>
+    <p><strong>Date</strong> <time datetime="@Event.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)">@Event.Date.ToString("MMMM d, yyyy", CultureInfo.InvariantCulture)</time></p>
+    <p><strong>Location</strong> @Event.Location</p>
+    <p class="description">@Event.Description</p>
+    <div class="actions">
+        <NavLink class="button" href="@($"events/{Event.Id}")">View details</NavLink>
+        <NavLink href="@($"events/{Event.Id}/register")">Register</NavLink>
+    </div>
+
+    <details class="editor">
+        <summary>Edit event · binding demo</summary>
+        <label for="name-@Event.Id">Event name</label>
+        <input id="name-@Event.Id" maxlength="120"
+               @bind:get="Event.Name" @bind:set="SetName" @bind:event="oninput" />
+
+        <label for="date-@Event.Id">Event date</label>
+        <input id="date-@Event.Id" type="date"
+               @bind:get="Event.Date" @bind:set="SetDate" />
+
+        <label for="location-@Event.Id">Location</label>
+        <input id="location-@Event.Id" maxlength="200"
+               @bind:get="Event.Location" @bind:set="SetLocation" @bind:event="oninput" />
+        <small>Edits update the card and linked pages for this session.</small>
+    </details>
+</article>
+
+@code {
+    [Parameter]
+    public EventModel Event { get; set; } = default!;
+
+    // The Event/EventChanged convention enables @bind-Event in a parent.
+    [Parameter]
+    public EventCallback<EventModel> EventChanged { get; set; }
+
+    private Task SetName(string name) =>
+        EventChanged.InvokeAsync(Event with { Name = name });
+
+    private Task SetDate(DateTime date) =>
+        EventChanged.InvokeAsync(Event with { Date = date });
+
+    private Task SetLocation(string location) =>
+        EventChanged.InvokeAsync(Event with { Location = location });
+}

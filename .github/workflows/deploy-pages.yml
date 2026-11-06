@@ -1,0 +1,66 @@
+name: Deploy EventEase to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v6
+      - name: Test GitHub Pages route redirects
+        run: node --test tests/pages-routing.test.cjs
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Configure GitHub Pages
+        id: pages
+        uses: actions/configure-pages@v5
+      - name: Publish Blazor WebAssembly
+        run: dotnet publish EventEase/EventEase.csproj --configuration Release --output artifacts
+      - name: Set base path for GitHub Pages
+        env:
+          PAGES_BASE_PATH: ${{ steps.pages.outputs.base_path }}
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+
+          base_path = os.environ['PAGES_BASE_PATH'].strip('/')
+          base_href = f'/{base_path}/' if base_path else '/'
+          for name in ('index.html', '404.html'):
+              page = Path('artifacts/wwwroot') / name
+              content = page.read_text(encoding='utf-8')
+              assert '<base href="/" />' in content, f'Missing base tag in {name}'
+              page.write_text(content.replace('<base href="/" />', f'<base href="{base_href}" />'), encoding='utf-8')
+          Path('artifacts/wwwroot/.nojekyll').touch()
+          PY
+      - name: Upload website
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: artifacts/wwwroot
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy website
+        id: deployment
+        uses: actions/deploy-pages@v4

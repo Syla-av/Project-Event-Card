@@ -1,0 +1,59 @@
+@page "/events/{Id:int}/register"
+@inject EventStore Store
+
+<PageTitle>Registration | EventEase</PageTitle>
+<NavLink href="events">← All events</NavLink>
+@if (currentEvent is null)
+{
+    <h1>Event not found</h1>
+    <p>Please choose an event from the event list before registering.</p>
+}
+else
+{
+    <section class="panel">
+        <p class="eyebrow">JOIN THE EXPERIENCE</p>
+        <h1>Register for @currentEvent.Name</h1>
+        <p>@currentEvent.Date.ToString("MMMM d, yyyy", CultureInfo.InvariantCulture) · @currentEvent.Location</p>
+        @if (submitted)
+        {
+            <p role="status">Thanks, @registration.Name! Your demo registration is complete.</p>
+        }
+        else
+        {
+            <EditForm Model="registration" OnValidSubmit="Submit" FormName="event-registration">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <label for="attendee-name">Your name</label>
+                <InputText id="attendee-name" autocomplete="name" @bind-Value="registration.Name" />
+                <ValidationMessage For="() => registration.Name" />
+                <label for="attendee-email">Email address</label>
+                <InputText id="attendee-email" type="email" autocomplete="email" @bind-Value="registration.Email" />
+                <ValidationMessage For="() => registration.Email" />
+                <p><small>This demo does not save registrations or send email.</small></p>
+                <button type="submit" class="button">Complete demo registration</button>
+            </EditForm>
+        }
+        <p><NavLink href="@($"events/{Id}")">Back to event details</NavLink></p>
+    </section>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+    private EventModel? currentEvent;
+    private RegistrationModel registration = new();
+    private bool submitted;
+    private int? loadedId;
+
+    protected override void OnParametersSet()
+    {
+        currentEvent = Store.Find(Id);
+        if (loadedId != Id)
+        {
+            registration = new();
+            submitted = false;
+            loadedId = Id;
+        }
+    }
+
+    private void Submit() => submitted = true;
+}

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Opening EventEase</title>
+    <!-- Replaced alongside index.html by the deployment workflow. -->
+    <base href="/" />
+</head>
+<body>
+    <p>Opening EventEase… <a href="./">Return to events</a></p>
+    <script>
+        const base = new URL(document.baseURI);
+        const route = window.location.pathname.slice(base.pathname.length)
+            + window.location.search + window.location.hash;
+        const destination = new URL(base);
+        destination.searchParams.set("__eventease_route", route);
+        window.location.replace(destination.href);
+    </script>
+</body>
+</html>
